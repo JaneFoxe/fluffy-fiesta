@@ -4,21 +4,47 @@ from django.db import models
 NULL_PARAM = {"null": True, "blank": True}
 
 
+class Contact(models.Model):
+    """Модель контакта"""
+
+    email = models.EmailField(max_length=250, verbose_name="Почта", **NULL_PARAM)
+    country = models.CharField(max_length=250, verbose_name="Страна", **NULL_PARAM)
+    city = models.CharField(max_length=250, verbose_name="Город", **NULL_PARAM)
+    street = models.CharField(max_length=250, verbose_name="Улица", **NULL_PARAM)
+    house_number = models.CharField(
+        max_length=25, verbose_name="Номер дома", **NULL_PARAM
+    )
+
+    def __str__(self):
+        return f"{self.country} - {self.email}"
+
+    class Meta:
+        verbose_name = "Контакт"
+        verbose_name_plural = "Контакты"
+
+
 class Network(models.Model):
     LEVEL_CHOICES = (
         (0, "Завод"),
         (1, "Розничная сеть"),
         (2, "Индивидуальный предприниматель"),
     )
-    name = models.CharField(max_length=250, verbose_name='Название')
-    contact = models.ForeignKey("network.contact", on_delete=models.SET_NULL,
-                                verbose_name="Контакты", **NULL_PARAM)
-    products = models.ForeignKey("network.product", on_delete=models.SET_NULL,
-                                 verbose_name="Продукты")
-    provider = models.ForeignKey('self', on_delete=models.SET_NULL, **NULL_PARAM,
-                                 verbose_name='Поставщик')
-    level = models.IntegerField(choices=LEVEL_CHOICES, verbose_name="Уровень в иерархии")
-    arrears = models.DecimalField("Задолженность", max_digits=10, decimal_places=2, min_value=0, **NULL_PARAM)
+    name = models.CharField(max_length=250, verbose_name="Название")
+    contact = models.ForeignKey(
+        Contact,
+        on_delete=models.SET_NULL,
+        verbose_name="Контакты",
+        **NULL_PARAM,
+    )
+    provider = models.ForeignKey(
+        "self", on_delete=models.SET_NULL, **NULL_PARAM, verbose_name="Поставщик"
+    )
+    level = models.IntegerField(
+        choices=LEVEL_CHOICES, verbose_name="Уровень в иерархии"
+    )
+    arrears = models.DecimalField(
+        "Задолженность", max_digits=10, decimal_places=2, **NULL_PARAM
+    )
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name="Дата создания", **NULL_PARAM
     )
@@ -44,29 +70,18 @@ class Network(models.Model):
         verbose_name_plural = "Сети"
 
 
-class Contact(models.Model):
-    """ Модель контакта """
-    email = models.EmailField(max_length=250, verbose_name='Почта', **NULL_PARAM)
-    country = models.CharField(max_length=250, verbose_name='Страна', **NULL_PARAM)
-    city = models.CharField(max_length=250, verbose_name='Город', **NULL_PARAM)
-    street = models.CharField(max_length=250, verbose_name='Улица', **NULL_PARAM)
-    house_number = models.CharField(max_length=25, verbose_name='Номер дома', **NULL_PARAM)
-
-    def __str__(self):
-        return f"{self.country} - {self.email}"
-
-    class Meta:
-        verbose_name = "Контакт"
-        verbose_name_plural = "Контакты"
-
-
 class Product(models.Model):
-    name = models.CharField(max_length=250, verbose_name='Название')
-    model_name = models.CharField(max_length=250, verbose_name='Модель', **NULL_PARAM)
+    name = models.CharField(max_length=250, verbose_name="Название")
+    model_name = models.CharField(max_length=250, verbose_name="Модель", **NULL_PARAM)
     release_date = models.DateTimeField(
         auto_now_add=True, verbose_name="Дата выхода на рынок"
     )
-    network = models.ForeignKey(Network, on_delete=models.CASCADE, verbose_name='Сеть')
+    network = models.ForeignKey(
+        Network,
+        on_delete=models.CASCADE,
+        verbose_name="Сеть",
+        related_name="network_products_set",
+    )
 
     def __str__(self):
         return f"{self.name}"
